@@ -2,17 +2,19 @@ import { useEffect, useState } from "react";
 import { getIssueImageFile } from "../services/issuesApi";
 import useAuth from "../hooks/useAuth";
 
+type ImageResult = { key: string; src?: string; error?: boolean };
+
 const IssueImage = ({ url }: { url: string }) => {
   const { token } = useAuth();
-  const [src, setSrc] = useState<string>();
-  const [error, setError] = useState(false);
+  const [result, setResult] = useState<ImageResult>();
+
+  // Each result is tied to the url + token it was loaded for, so a new url
+  // shows "loading" without having to reset state inside the effect.
+  const key = `${url}|${token ?? ""}`;
 
   useEffect(() => {
     let active = true;
     let objectUrl: string | undefined;
-
-    setSrc(undefined);
-    setError(false);
 
     getIssueImageFile(url, token ?? undefined)
       .then((blob) => {
@@ -20,14 +22,14 @@ const IssueImage = ({ url }: { url: string }) => {
 
         if (active) {
           objectUrl = createdUrl;
-          setSrc(createdUrl);
+          setResult({ key, src: createdUrl });
         } else {
           URL.revokeObjectURL(createdUrl);
         }
       })
       .catch(() => {
         if (active) {
-          setError(true);
+          setResult({ key, error: true });
         }
       });
 
@@ -35,12 +37,14 @@ const IssueImage = ({ url }: { url: string }) => {
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [url, token]);
+  }, [url, token, key]);
 
-  if (error) return <p>שגיאה בטעינת התמונה</p>;
-  if (!src) return <p>טוען תמונה...</p>;
+  const current = result?.key === key ? result : undefined;
 
-  return <img src={src} alt="תמונת המפגע" width={250} />;
+  if (current?.error) return <p>שגיאה בטעינת התמונה</p>;
+  if (!current?.src) return <p>טוען תמונה...</p>;
+
+  return <img src={current.src} alt="תמונת המפגע" width={250} />;
 };
 
 export default IssueImage;

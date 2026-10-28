@@ -1,4 +1,4 @@
-import {  useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "../types/auth";
 import { getCurrentUser } from "../services/authApi";
@@ -34,28 +34,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return savedToken;
   });
 
-  const { data: user, isPending, isFetching, error } = useQuery({
+  const { data: user, isPending, isFetching } = useQuery({
     queryKey: ["currentUser", token],
     queryFn: async () => {
-      const response = await getCurrentUser(token!);
-      return response.data;
+      try {
+        const response = await getCurrentUser(token!);
+        return response.data;
+      } catch (err) {
+        // The server rejected the saved token: sign out locally.
+        if (err instanceof Error && "status" in err && err.status === 401) {
+          localStorage.removeItem("accessToken");
+          setToken(null);
+        }
+        throw err;
+      }
     },
     enabled: token !== null,
     retry: false,
   });
-  useEffect(() => {
-    if (
-      token !== null &&
-      error instanceof Error &&
-      "status" in error &&
-      error.status === 401
-    ) {
-      localStorage.removeItem("accessToken");
-      setToken(null);
-      queryClient.removeQueries({ queryKey: ["currentUser"] });
-    }
-  }, [token, error, queryClient]);
-
   const login = (newToken: string, user: User) => {
     localStorage.setItem("accessToken", newToken);
     queryClient.setQueryData(["currentUser", newToken], user);
