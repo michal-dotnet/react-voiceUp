@@ -1,0 +1,402 @@
+// VoiceUp data model. 16 entities, as approved in the refined plan.
+// Provenance rule: user claims, admin-verified records and external responses live in
+// separate tables, so the API can always label where a piece of information came from.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ModerationStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum ResolutionStatus {
+  OPEN
+  UNDER_REVIEW
+  REFERRED
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum ContentVisibility {
+  VISIBLE
+  HIDDEN
+}
+
+enum CommentKind {
+  COMMENT
+  REOPEN_REQUEST
+}
+
+enum SolutionKind {
+  PERSONAL_EXPERIENCE
+  SUGGESTION
+}
+
+enum ReferralStatus {
+  PREPARED
+  SENT
+  ACKNOWLEDGED
+}
+
+enum ReportTargetType {
+  ISSUE
+  COMMENT
+  SOLUTION
+}
+
+enum ReportStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
+enum NotificationType {
+  ISSUE_APPROVED
+  ISSUE_REJECTED
+  STATUS_CHANGED
+  ISSUE_UPDATE
+  EXTERNAL_RESPONSE
+  ISSUE_MERGED
+}
+
+// ---------------------------------------------------------------------------
+// Users and reference data
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(80)
+  email        String   @unique @db.VarChar(254)
+  passwordHash String
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  issues             PublicIssue[]        @relation("IssueAuthor")
+  confirmations      IssueConfirmation[]
+  follows            IssueFollow[]
+  comments           IssueComment[]
+  solutions          ProposedSolution[]
+  attachments        MediaAttachment[]
+  assignmentsCreated IssueAssignment[]
+  responsesRecorded  ExternalResponse[]
+  statusChanges      IssueStatusHistory[]
+  merges             IssueMergeHistory[]
+  reportsFiled       ContentReport[]      @relation("ReportReporter")
+  reportsHandled     ContentReport[]      @relation("ReportHandler")
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(80)
+  slug      String   @unique @db.VarChar(80)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  issues PublicIssue[]
+}
+
+/// Reference data only: organizations never log in and never post to VoiceUp themselves.
+model Organization {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique @db.VarChar(120)
+  type        String?  @db.VarChar(80)
+  contactInfo String?  @db.VarChar(500)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments IssueAssignment[]
+}
+
+// ---------------------------------------------------------------------------
+// Issues
+// ---------------------------------------------------------------------------
+
+model PublicIssue {
+  id               String           @id @default(uuid()) @db.Uuid
+  authorId         String           @db.Uuid
+  categoryId       String           @db.Uuid
+  title            String           @db.VarChar(150)
+  description      String
+  area             String           @db.VarChar(100)
+  location         String?          @db.VarChar(200)
+  moderationStatus ModerationStatus @default(PENDING_REVIEW)
+  rejectionReason  String?          @db.VarChar(500)
+  resolutionStatus ResolutionStatus @default(OPEN)
+  /// Set when this issue was merged into a canonical issue. Never chained: always points at a canonical issue.
+  mergedIntoId     String?          @db.Uuid
+  publishedAt      DateTime?
+  resolvedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  author       User          @relation("IssueAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  category     Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  mergedInto   PublicIssue?  @relation("IssueMerge", fields: [mergedIntoId], references: [id], onDelete: Restrict)
+  mergedIssues PublicIssue[] @relation("IssueMerge")
+
+  confirmations      IssueConfirmation[]
+  follows            IssueFollow[]
+  comments           IssueComment[]
+  solutions          ProposedSolution[]
+  attachments        MediaAttachment[]
+  assignments        IssueAssignment[]
+  statusHistory      IssueStatusHistory[]
+  mergedAsSource     IssueMergeHistory[]  @relation("MergeSource")
+  mergedAsCanonical  IssueMergeHistory[]  @relation("MergeCanonical")
+  notifications      Notification[]
+  guestConfirmations GuestConfirmation[]
+
+  @@index([moderationStatus, mergedIntoId, createdAt])
+  @@index([categoryId])
+  @@index([area])
+  @@index([authorId])
+  @@index([mergedIntoId])
+}
+
+/// A user's own claim that they experience the same issue. Counted as "reported by N users", never as verification.
+model IssueConfirmation {
+  id        String   @id @default(uuid()) @db.Uuid
+  issueId   String   @db.Uuid
+  userId    String   @db.Uuid
+  note      String?  @db.VarChar(500)
+  createdAt DateTime @default(now())
+
+  issue PublicIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([issueId, userId])
+  @@index([userId])
+}
+
+/// A guest's (unauthenticated) "this affects me too". Unverified and counted separately from users.
+/// Only HMAC digests are stored: guestKeyHash identifies the guest token, ipHash supports per-IP caps.
+model GuestConfirmation {
+  id           String   @id @default(uuid()) @db.Uuid
+  issueId      String   @db.Uuid
+  guestKeyHash String   @db.Char(64)
+  ipHash       String   @db.Char(64)
+  createdAt    DateTime @default(now())
+
+  issue PublicIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@unique([issueId, guestKeyHash])
+  @@index([issueId, ipHash])
+}
+
+model IssueFollow {
+  id        String   @id @default(uuid()) @db.Uuid
+  issueId   String   @db.Uuid
+  userId    String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  issue PublicIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([issueId, userId])
+  @@index([userId])
+}
+
+model IssueComment {
+  id               String            @id @default(uuid()) @db.Uuid
+  issueId          String            @db.Uuid
+  authorId         String            @db.Uuid
+  body             String            @db.VarChar(2000)
+  kind             CommentKind       @default(COMMENT)
+  moderationStatus ContentVisibility @default(VISIBLE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  issue  PublicIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  author User        @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([issueId, createdAt])
+}
+
+/// Community-proposed content. Always labelled as a user's experience or an unverified suggestion.
+model ProposedSolution {
+  id               String            @id @default(uuid()) @db.Uuid
+  issueId          String            @db.Uuid
+  authorId         String            @db.Uuid
+  kind             SolutionKind
+  body             String            @db.VarChar(3000)
+  moderationStatus ContentVisibility @default(VISIBLE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  issue  PublicIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  author User        @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([issueId, createdAt])
+}
+
+model MediaAttachment {
+  id         String   @id @default(uuid()) @db.Uuid
+  issueId    String   @db.Uuid
+  uploaderId String   @db.Uuid
+  mimeType   String   @db.VarChar(50)
+  sizeBytes  Int
+  /// The image itself (stored in the database, so it survives redeploys of the server).
+  data       Bytes
+  createdAt  DateTime @default(now())
+
+  issue    PublicIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  uploader User        @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+
+  @@index([issueId])
+}
+
+// ---------------------------------------------------------------------------
+// Case handling (admin only)
+// ---------------------------------------------------------------------------
+
+/// A referral of an issue to an organization. SENT and ACKNOWLEDGED always carry a date and evidence.
+model IssueAssignment {
+  id             String         @id @default(uuid()) @db.Uuid
+  issueId        String         @db.Uuid
+  organizationId String         @db.Uuid
+  assignedById   String         @db.Uuid
+  referralStatus ReferralStatus @default(PREPARED)
+  sentAt         DateTime?
+  sentMethod     String?        @db.VarChar(100)
+  sentEvidence   String?        @db.VarChar(1000)
+  ackAt          DateTime?
+  ackEvidence    String?        @db.VarChar(1000)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  issue        PublicIssue        @relation(fields: [issueId], references: [id], onDelete: Restrict)
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  assignedBy   User               @relation(fields: [assignedById], references: [id], onDelete: Restrict)
+  responses    ExternalResponse[]
+
+  @@unique([issueId, organizationId])
+  @@index([organizationId])
+}
+
+/// A response from an external organization, as recorded by a VoiceUp admin with evidence.
+model ExternalResponse {
+  id           String   @id @default(uuid()) @db.Uuid
+  assignmentId String   @db.Uuid
+  recordedById String   @db.Uuid
+  receivedAt   DateTime
+  summary      String   @db.VarChar(2000)
+  evidenceNote String   @db.VarChar(1000)
+  evidenceUrl  String?  @db.VarChar(500)
+  createdAt    DateTime @default(now())
+
+  assignment IssueAssignment @relation(fields: [assignmentId], references: [id], onDelete: Restrict)
+  recordedBy User            @relation(fields: [recordedById], references: [id], onDelete: Restrict)
+
+  @@index([assignmentId])
+}
+
+/// The issue timeline. A note-only "verified admin update" has fromStatus = toStatus.
+model IssueStatusHistory {
+  id          String           @id @default(uuid()) @db.Uuid
+  issueId     String           @db.Uuid
+  fromStatus  ResolutionStatus
+  toStatus    ResolutionStatus
+  changedById String           @db.Uuid
+  note        String           @db.VarChar(2000)
+  source      String?          @db.VarChar(500)
+  createdAt   DateTime         @default(now())
+
+  issue     PublicIssue @relation(fields: [issueId], references: [id], onDelete: Restrict)
+  changedBy User        @relation(fields: [changedById], references: [id], onDelete: Restrict)
+
+  @@index([issueId, createdAt])
+}
+
+model IssueMergeHistory {
+  id               String   @id @default(uuid()) @db.Uuid
+  sourceIssueId    String   @db.Uuid
+  canonicalIssueId String   @db.Uuid
+  mergedById       String   @db.Uuid
+  reason           String?  @db.VarChar(500)
+  createdAt        DateTime @default(now())
+
+  sourceIssue    PublicIssue @relation("MergeSource", fields: [sourceIssueId], references: [id], onDelete: Restrict)
+  canonicalIssue PublicIssue @relation("MergeCanonical", fields: [canonicalIssueId], references: [id], onDelete: Restrict)
+  mergedBy       User        @relation(fields: [mergedById], references: [id], onDelete: Restrict)
+
+  @@index([canonicalIssueId])
+  @@index([sourceIssueId])
+}
+
+// ---------------------------------------------------------------------------
+// Moderation, notifications and audit
+// ---------------------------------------------------------------------------
+
+model ContentReport {
+  id          String           @id @default(uuid()) @db.Uuid
+  reporterId  String           @db.Uuid
+  targetType  ReportTargetType
+  targetId    String           @db.Uuid
+  reason      String           @db.VarChar(500)
+  status      ReportStatus     @default(OPEN)
+  handledById String?          @db.Uuid
+  handledAt   DateTime?
+  createdAt   DateTime         @default(now())
+
+  reporter  User  @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  handledBy User? @relation("ReportHandler", fields: [handledById], references: [id], onDelete: SetNull)
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  issueId   String?          @db.Uuid
+  message   String           @db.VarChar(300)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issue PublicIssue? @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String   @db.Uuid
+  action     String   @db.VarChar(60)
+  entityType String   @db.VarChar(40)
+  entityId   String   @db.Uuid
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}

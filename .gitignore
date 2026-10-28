@@ -1,0 +1,60 @@
+# Dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+
+# Secrets and environment files (only the .env.example template is kept)
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Images
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.bmp
+*.ico
+*.svg
+*.tif
+*.tiff
+*.heic
+*.avif
+uploads/
+
+# Backups and archives
+*backup*/
+*backup*
+*.bak
+*.dump
+*.sql.gz
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.rar
+*.7z
+
+# Logs (including the local setup run logs)
+logs/
+*.log
+voiceup-backend/setup/*.txt
+
+# Office documents
+*.docx
+*.doc
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db

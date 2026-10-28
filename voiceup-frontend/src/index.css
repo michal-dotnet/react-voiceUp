@@ -1,0 +1,1034 @@
+/*
+ * VoiceUp design: a playful, colorful style (thick dark outlines, rounded corners,
+ * hard shadows, bright accent colors, Rubik font). Most rules style plain elements
+ * inside #root, so the React components need only a few class names.
+ */
+
+:root {
+  --ink: #1a1033;
+  --ink-soft: #3b3155;
+  --ground: #fff7ec;
+  --paper: #ffffff;
+  --violet: #6c3bff;
+  --violet-dark: #5a2ee6;
+  --sun: #ffc23d;
+  --sun-soft: #fff3c4;
+  --pink: #ff7ab6;
+  --pink-soft: #ffd3e8;
+  --teal: #12b8a6;
+  --teal-soft: #c9f1ec;
+  --sky: #3da9fc;
+  --sky-soft: #cfe8ff;
+  --coral: #ff5a4e;
+  --coral-soft: #ffd0cc;
+
+  --line: 3px solid var(--ink);
+  --radius: 24px;
+  --shadow-hard: 0 6px 0 var(--ink);
+
+  font-family: "Rubik", system-ui, "Segoe UI", sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--ground);
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--ground);
+  overflow-x: hidden;
+}
+
+#root {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+  text-align: start;
+  position: relative;
+}
+
+/* ---------- Typography ---------- */
+
+#root h1 {
+  font-size: clamp(34px, 5vw, 56px);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -1px;
+  margin: 28px 0 20px;
+}
+
+#root h2 {
+  font-size: 23px;
+  font-weight: 900;
+  line-height: 1.25;
+  margin: 0 0 8px;
+}
+
+#root h3 {
+  font-size: 19px;
+  font-weight: 900;
+  margin: 12px 0 8px;
+}
+
+#root p {
+  margin: 4px 0;
+}
+
+#root a {
+  color: var(--violet-dark);
+  font-weight: 700;
+}
+
+#root a:hover {
+  color: var(--violet);
+}
+
+#root [role="alert"] {
+  background: var(--coral-soft);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-weight: 700;
+}
+
+/* ---------- Header ---------- */
+
+.vu-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  margin: 0 -24px 8px;
+  padding: 14px 24px;
+  background: rgba(255, 247, 236, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: var(--line);
+}
+
+.vu-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.vu-nav > a,
+.vu-nav > span {
+  text-decoration: none;
+  color: var(--ink) !important;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.vu-nav > a:hover {
+  background: var(--paper);
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+
+.vu-nav > a.active {
+  background: var(--sun);
+  border-color: var(--ink);
+}
+
+.vu-nav .vu-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  font-weight: 900;
+  padding: 4px 10px 4px 4px;
+  margin-inline-end: auto;
+}
+
+.vu-nav .vu-logo:hover {
+  background: transparent;
+  border-color: transparent;
+}
+
+.vu-nav > span {
+  color: var(--ink-soft) !important;
+}
+
+.vu-nav .vu-logo.active {
+  background: transparent;
+  border-color: transparent;
+}
+
+/* The animated sound-wave logo */
+.vu-wave {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--violet);
+  display: inline-flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  padding-bottom: 11px;
+}
+
+.vu-wave i {
+  display: block;
+  width: 5px;
+  border-radius: 3px;
+  transform-origin: bottom;
+  animation: vu-wave 1s ease-in-out infinite;
+}
+
+.vu-wave i:nth-child(1) { height: 16px; background: var(--sun); }
+.vu-wave i:nth-child(2) { height: 22px; background: var(--pink); animation-delay: 0.15s; }
+.vu-wave i:nth-child(3) { height: 13px; background: var(--teal); animation-delay: 0.3s; }
+.vu-wave i:nth-child(4) { height: 19px; background: var(--paper); animation-delay: 0.45s; }
+
+.vu-logo-accent {
+  color: var(--violet);
+}
+
+/* ---------- Buttons ---------- */
+
+#root button,
+#root input[type="submit"],
+#root .vu-btn {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 16px;
+  padding: 10px 20px;
+  min-height: 46px;
+  margin: 6px 0 6px 8px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 0 var(--ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s;
+}
+
+#root button:hover:not(:disabled),
+#root input[type="submit"]:hover:not(:disabled),
+#root .vu-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--ink);
+}
+
+#root button:active:not(:disabled),
+#root input[type="submit"]:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+#root button:disabled,
+#root input[type="submit"]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+#root button[type="submit"],
+#root input[type="submit"] {
+  background: var(--coral);
+}
+
+#root .vu-btn {
+  background: var(--sun);
+}
+
+/* The "this affects me too" button */
+#root .vu-thumb {
+  background: var(--sun-soft);
+  border-radius: 999px;
+  font-size: 18px;
+}
+
+#root .vu-thumb:hover:not(:disabled) {
+  background: var(--sun);
+}
+
+#root .vu-thumb:active:not(:disabled) {
+  animation: vu-pop 0.45s ease;
+}
+
+#root .vu-thumb:disabled {
+  opacity: 1;
+  background: var(--teal-soft);
+}
+
+/* ---------- Forms ---------- */
+
+#root form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#root main > form,
+#root > form,
+.vu-form-card {
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 32px;
+  padding: 32px;
+  box-shadow: 0 10px 0 var(--ink);
+  max-width: 760px;
+}
+
+#root form > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#root label {
+  font-weight: 900;
+}
+
+#root input:not([type="submit"]):not([type="file"]),
+#root textarea,
+#root select {
+  font-family: inherit;
+  font-size: 17px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  padding: 12px 14px;
+  width: 100%;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+#root textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+#root input:focus,
+#root textarea:focus,
+#root select:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 4px rgba(108, 59, 255, 0.25);
+}
+
+#root input[type="file"] {
+  font-family: inherit;
+  padding: 22px;
+  border: 3px dashed var(--ink);
+  border-radius: 22px;
+  background: var(--ground);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+#root input[type="file"]:hover {
+  background: #e4dbff;
+  border-color: var(--violet);
+}
+
+/* Validation messages (react-hook-form errors under each field, and on the login form) */
+#root form > div > p:not(.vu-file-name),
+#root .vu-login > p:not(.vu-mascot) {
+  font-size: 14px;
+  color: #b3261e;
+  font-weight: 700;
+}
+
+/* The filter select of the issues list */
+#root select#statusFilter {
+  width: auto;
+  min-width: 220px;
+  margin: 6px 8px 24px 0;
+}
+
+/* ---------- Issue cards ---------- */
+
+#root article {
+  position: relative;
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 28px;
+  padding: 24px 26px;
+  margin: 0 0 24px;
+  box-shadow: 0 20px 34px -24px rgba(26, 16, 51, 0.5);
+  /* "backwards": the animation must not keep a transform, or the tilt effect would not apply. */
+  animation: vu-rise 0.5s ease backwards;
+  transition: box-shadow 0.25s, transform 0.15s ease-out;
+}
+
+#root article:hover {
+  box-shadow: 0 26px 40px -22px rgba(26, 16, 51, 0.55);
+}
+
+#root article h2 {
+  font-size: 25px;
+}
+
+#root article img {
+  width: 220px;
+  height: 150px;
+  object-fit: cover;
+  border: var(--line);
+  border-radius: 20px;
+  margin: 10px 0 10px 10px;
+  transition: transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+#root article img:hover {
+  transform: rotate(-2deg) scale(1.04);
+}
+
+/* Status chips (class added by IssueCard from the resolution status) */
+.vu-status {
+  display: inline-block;
+  padding: 4px 14px !important;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  background: var(--sky-soft);
+}
+
+.vu-status-OPEN { background: var(--sky); }
+.vu-status-UNDER_REVIEW { background: var(--sun); }
+.vu-status-REFERRED { background: var(--pink); }
+.vu-status-IN_PROGRESS { background: var(--violet); color: #fff; }
+.vu-status-RESOLVED { background: var(--teal); }
+
+#root .vu-rejected {
+  background: var(--coral-soft);
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+
+/* Comments inside a card */
+#root article section {
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--ground);
+}
+
+#root article section > div {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin: 8px 0;
+}
+
+#root article form {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* Admin: wrappers around a card and its action buttons */
+#root main > div > div {
+  margin-bottom: 18px;
+}
+
+/* ---------- Pagination ---------- */
+
+.vu-pagination {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+/* ---------- Home ---------- */
+
+.vu-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+  padding: 24px 0 48px;
+}
+
+.vu-hero h2 {
+  font-size: clamp(30px, 4vw, 48px) !important;
+  line-height: 1.1 !important;
+}
+
+.vu-highlight {
+  display: inline-block;
+  background: var(--violet);
+  color: #fff;
+  padding: 0 14px;
+  border-radius: 16px;
+  transform: rotate(-2deg);
+}
+
+.vu-hero-lead {
+  font-size: 20px;
+  color: var(--ink-soft);
+  max-width: 540px;
+  margin: 12px 0 24px !important;
+}
+
+.vu-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.vu-live::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--coral);
+  animation: vu-pulse 1.4s ease-out infinite;
+}
+
+.vu-hero-art {
+  position: relative;
+  height: 320px;
+}
+
+.vu-hero-art .vu-blob {
+  position: absolute;
+  border-radius: 46% 54% 60% 40%;
+  animation: vu-float2 8s ease-in-out infinite;
+}
+
+.vu-hero-art .vu-blob.a { inset: 20px 40px 40px 10px; background: var(--sun); opacity: 0.7; }
+.vu-hero-art .vu-blob.b { width: 150px; height: 150px; bottom: 0; left: 0; background: var(--pink); opacity: 0.6; animation-direction: reverse; }
+
+.vu-hero-art .vu-bubble {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--line);
+  background: var(--paper);
+  font-size: 44px;
+  animation: vu-float 5s ease-in-out infinite;
+}
+
+.vu-hero-art .vu-bubble.one { width: 110px; height: 110px; border-radius: 30px; top: 10px; right: 30px; background: var(--teal); }
+.vu-hero-art .vu-bubble.two { width: 96px; height: 96px; border-radius: 50%; top: 140px; right: 170px; background: var(--sky); animation-delay: 1s; }
+.vu-hero-art .vu-bubble.three { width: 84px; height: 84px; border-radius: 24px; bottom: 20px; right: 60px; background: var(--paper); animation-delay: 2s; }
+
+.vu-ticker {
+  margin: 0 -24px 40px;
+  background: var(--ink);
+  color: #fff;
+  padding: 16px 0;
+  overflow: hidden;
+  transform: rotate(-1deg);
+}
+
+.vu-ticker-track {
+  display: flex;
+  gap: 48px;
+  width: max-content;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 19px;
+  animation: vu-marquee 28s linear infinite;
+}
+
+.vu-ticker-track span:nth-child(3n + 2) { color: var(--sun); }
+.vu-ticker-track span:nth-child(3n) { color: var(--pink); }
+
+.vu-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  margin: 12px 0 40px;
+}
+
+.vu-tile {
+  border: var(--line);
+  border-radius: 26px;
+  padding: 22px;
+  background: var(--paper);
+  transition: transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1), box-shadow 0.25s;
+}
+
+.vu-tile:hover {
+  transform: translateY(-8px) rotate(-1.5deg);
+  box-shadow: 0 14px 0 -4px rgba(26, 16, 51, 0.15);
+}
+
+.vu-tile .vu-emoji {
+  font-size: 36px;
+}
+
+.vu-tile strong {
+  display: block;
+  font-size: 20px;
+  margin: 8px 0 4px;
+}
+
+.vu-tile.sun { background: var(--sun); }
+.vu-tile.sky { background: var(--sky); }
+.vu-tile.pink { background: var(--pink); }
+.vu-tile.teal { background: var(--teal); }
+.vu-tile.violet { background: var(--violet); color: #fff; }
+
+.vu-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ---------- Decorative components ---------- */
+
+.vu-emoji {
+  display: inline-block;
+  animation: vu-bounce 1.8s ease-in-out infinite;
+}
+
+.vu-floaties {
+  position: relative;
+  height: 120px;
+  margin-top: 24px;
+  pointer-events: none;
+}
+
+.vu-floaties span {
+  position: absolute;
+  font-size: 40px;
+  animation: vu-float 5s ease-in-out infinite;
+}
+
+/* Login: the mascot whose eyes follow the mouse */
+.vu-login {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 40px;
+  max-width: 980px !important;
+  margin-top: 32px;
+}
+
+.vu-login > * {
+  grid-column: 1;
+}
+
+.vu-login > .vu-mascot {
+  grid-column: 2;
+  grid-row: 1 / span 12;
+}
+
+.vu-mascot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 320px;
+}
+
+.vu-mascot-bubble {
+  background: var(--paper);
+  border: var(--line);
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.vu-mascot-body {
+  position: relative;
+  width: 240px;
+  height: 210px;
+  border-radius: 48% 52% 50% 50% / 55% 55% 45% 45%;
+  background: var(--sun);
+  border: 4px solid var(--ink);
+  box-shadow: 0 12px 0 var(--ink);
+  animation: vu-breathe 3s ease-in-out infinite;
+}
+
+.vu-mascot-eyes {
+  position: absolute;
+  top: 62px;
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  gap: 34px;
+}
+
+.vu-eye {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid var(--ink);
+  overflow: hidden;
+  animation: vu-blink 4s infinite;
+}
+
+.vu-pupil {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: transform 0.08s linear;
+}
+
+.vu-mouth {
+  position: absolute;
+  top: 140px;
+  left: 50%;
+  width: 64px;
+  height: 28px;
+  margin-left: -32px;
+  border-radius: 0 0 40px 40px;
+  background: var(--ink);
+}
+
+/* Cards that tilt toward the mouse */
+.vu-tilt {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.15s ease-out, box-shadow 0.25s;
+}
+
+/* A soft colored light that follows the mouse */
+.vu-cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 420px;
+  height: 420px;
+  margin: -210px 0 0 -210px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 194, 61, 0.35), rgba(255, 122, 182, 0.18) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.2s ease-out;
+}
+
+#root > *:not(.vu-cursor-glow) {
+  position: relative;
+  z-index: 1;
+}
+
+#root > .vu-header {
+  position: sticky;
+  z-index: 10;
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes vu-wave { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+@keyframes vu-float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-16px) rotate(6deg); } }
+@keyframes vu-float2 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(16px, 12px) scale(1.06); } }
+@keyframes vu-bounce { 0%, 100% { transform: translateY(0) scale(1, 1); } 40% { transform: translateY(-12px) scale(0.95, 1.06); } 60% { transform: translateY(0) scale(1.08, 0.92); } }
+@keyframes vu-pop { 0% { transform: scale(1); } 40% { transform: scale(1.18) rotate(-6deg); } 100% { transform: scale(1); } }
+@keyframes vu-pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 90, 78, 0.55); } 100% { box-shadow: 0 0 0 12px rgba(255, 90, 78, 0); } }
+@keyframes vu-marquee { from { transform: translateX(0); } to { transform: translateX(50%); } }
+@keyframes vu-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes vu-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 0.97); } }
+@keyframes vu-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 760px) {
+  #root { padding: 0 16px 48px; }
+  .vu-header { margin: 0 -16px 8px; padding: 12px 16px; }
+  .vu-hero { grid-template-columns: 1fr; }
+  .vu-hero-art { height: 220px; }
+  .vu-login { grid-template-columns: 1fr; }
+  .vu-login > .vu-mascot { grid-column: 1; grid-row: auto; min-height: 260px; }
+  #root main > form, #root > form { padding: 22px; }
+  .vu-cursor-glow { display: none; }
+}
+
+/* People who asked their system for less motion get a still page. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .vu-cursor-glow { display: none; }
+}
+
+/* =====================================================================
+ * Full-width layout, 3 cards per row, image slideshow, playful fonts.
+ * ===================================================================== */
+
+:root {
+  --gutter: clamp(16px, 3vw, 48px);
+  --fun: "Fredoka", "Rubik", system-ui, sans-serif;
+}
+
+/* Fill the whole screen instead of a fixed-width column. */
+#root {
+  max-width: none;
+  width: 100%;
+  padding: 0 var(--gutter) 64px;
+}
+
+.vu-header {
+  margin: 0 calc(var(--gutter) * -1) 8px;
+  padding: 14px var(--gutter);
+}
+
+.vu-ticker {
+  margin-inline: calc(var(--gutter) * -1);
+}
+
+#root main > form,
+#root > form {
+  margin-inline: auto;
+}
+
+/* Playful display font for titles, buttons, navigation and chips. */
+#root h1,
+#root h2,
+#root h3,
+#root button,
+#root input[type="submit"],
+#root .vu-btn,
+.vu-nav,
+.vu-status,
+.vu-live,
+.vu-tile strong,
+.vu-mascot-bubble {
+  font-family: var(--fun);
+  letter-spacing: 0;
+}
+
+#root h1 {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+#root h1::after {
+  content: "";
+  display: block;
+  width: 90px;
+  height: 8px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sun), var(--pink), var(--violet));
+}
+
+/* ---------- Card grid: 3 per row on wide screens ---------- */
+
+.vu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.vu-grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#root .vu-grid article {
+  margin: 0;
+  padding: 26px 20px 18px;
+  overflow: hidden;
+}
+
+#root .vu-grid article h2 {
+  font-size: 21px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+/* A colored band on top of every card, cycling through the palette. */
+#root .vu-grid article::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 10px;
+  background: var(--sky);
+  border-bottom: 2px solid var(--ink);
+}
+
+.vu-grid > :nth-child(5n + 2) article::before,
+.vu-grid > article:nth-child(5n + 2)::before { background: var(--sun) !important; }
+.vu-grid > :nth-child(5n + 3) article::before,
+.vu-grid > article:nth-child(5n + 3)::before { background: var(--pink) !important; }
+.vu-grid > :nth-child(5n + 4) article::before,
+.vu-grid > article:nth-child(5n + 4)::before { background: var(--teal) !important; }
+.vu-grid > :nth-child(5n + 5) article::before,
+.vu-grid > article:nth-child(5n + 5)::before { background: var(--violet) !important; }
+
+/* Long descriptions are cut after 3 lines to keep the cards compact. */
+#root .vu-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+/* Category, area and location as small chips with an icon. */
+#root .vu-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 3px 0 3px 6px;
+  padding: 3px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--ground);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+}
+
+.vu-meta-category::before { content: "🏷️"; }
+.vu-meta-area::before { content: "🗺️"; }
+.vu-meta-location::before { content: "📍"; }
+
+/* Status chip with an emoji per status. */
+#root .vu-status {
+  display: inline-flex;
+  margin: 10px 0 4px;
+  font-size: 14px;
+}
+
+.vu-status::before { margin-inline-end: 6px; }
+.vu-status-OPEN::before { content: "🟦"; }
+.vu-status-UNDER_REVIEW::before { content: "🔎"; }
+.vu-status-REFERRED::before { content: "📨"; }
+.vu-status-IN_PROGRESS::before { content: "🛠️"; }
+.vu-status-RESOLVED::before { content: "🎉"; }
+
+/* Smaller buttons inside cards. */
+#root .vu-grid article button,
+#root .vu-grid article .vu-btn {
+  font-size: 15px;
+  min-height: 42px;
+  padding: 8px 16px;
+}
+
+#root .vu-grid article .vu-thumb {
+  font-size: 17px;
+}
+
+/* ---------- Image slideshow (IssueImages) ---------- */
+
+.vu-slides {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin: 12px 0 6px;
+  border: var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--ground);
+}
+
+.vu-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 0.6s ease, transform 3s ease;
+}
+
+.vu-slide.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#root .vu-slide img {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+#root .vu-slide img:hover {
+  transform: none;
+}
+
+.vu-slide p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.vu-dots {
+  position: absolute;
+  bottom: 10px;
+  inset-inline: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+#root .vu-dots button {
+  width: 12px;
+  height: 12px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: none;
+}
+
+#root .vu-dots button.active {
+  background: var(--sun);
+  transform: scale(1.25);
+}
+
+.vu-slide-count {
+  position: absolute;
+  top: 10px;
+  inset-inline-start: 10px;
+  padding: 2px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---------- Responsive grid ---------- */
+
+@media (max-width: 1100px) {
+  .vu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .vu-grid { grid-template-columns: 1fr; }
+  .vu-header { margin: 0 calc(var(--gutter) * -1) 8px; padding: 12px var(--gutter); }
+}
